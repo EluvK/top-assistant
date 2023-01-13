@@ -48,7 +48,7 @@ impl ConfigJson {
         config.config_path = String::from(file_path_str); // save for furture use.
 
         config.try_encrypt_password();
-        config.try_decrypt_keystore()?;
+        // config.try_decrypt_keystore()?;
         config.update_config_file()?;
         Ok(())
     }
@@ -68,11 +68,11 @@ impl ConfigJson {
         }
     }
 
-    fn try_decrypt_keystore(&mut self) -> Result<(), AuError> {
-        assert!(self.temp_config.take_pswd().is_empty());
-        let pswd = self.fetch_password();
-        self.user_config.try_decrypt_keystore(pswd)
-    }
+    // fn try_decrypt_keystore(&mut self) -> Result<(), AuError> {
+    //     assert!(self.temp_config.take_pswd().is_empty());
+    //     let pswd = self.fetch_password();
+    //     self.user_config.try_decrypt_keystore(pswd)
+    // }
 
     /// Decode encrypted password with machine-id's RSA key
     pub fn fetch_password(&self) -> String {
