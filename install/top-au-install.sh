@@ -10,7 +10,7 @@ export PATH
 
 proj_name="TOP Auto Upgrader"
 
-daemon_script_url="https://raw.githubusercontent.com/telosprotocol/top-auto-upgrader/master/install/top-au-daemon.sh"
+daemon_script_url="https://raw.githubusercontent.com/EluvK/top-assistant/eluvk/install/top-au-daemon.sh"
 
 target_dir=/usr/bin
 config_dir=/etc/top-au
@@ -20,6 +20,8 @@ service_stub=/etc/init.d/${service_name}
 [ ! -d "/etc/init.d" ] && service_stub=/usr/bin/${service_name} # compatible with centos 8 or higher, which do not have directory /etc/init.d
 bin_name=top-auto-upgrader
 
+# TODO edit here
+user_config_accouts=""
 
 # config_var:
 config_machine_id=""
@@ -288,7 +290,7 @@ function pre_install() {
     _pre_install_machine_id
     ! _pre_quite_check_package_dir && _pre_install_package_dir
     ! _pre_quite_check_data_dir && _pre_install_data_dir
-    ! _pre_quite_check_mining_key && _pre_install_mining_key
+    # ! _pre_quite_check_mining_key && _pre_install_mining_key
     _pre_install_mining_key_pswd
     _pre_install_topio_user
 }
@@ -315,8 +317,7 @@ function write_top_auto_upgrader_config() {
     cat > ${config_dir}/config.json <<-EOF
 {
     "user_config": {
-        "mining_keystore_file_dir": "${config_topio_mining_keystore_file}",
-        "mining_pub_key": "${config_topio_mining_pub_key}",
+        "accounts": [${user_config_accouts}],
         "mining_pswd_enc": "",
         "topio_package_dir": "${config_topio_package_dir}",
         "topio_user": "${config_topio_user}"
@@ -475,17 +476,17 @@ function do_uninstall_action() {
 }
 
 function build_or_fetch_top_auto_upgrader() {
-    git clone https://github.com/telosprotocol/top-auto-upgrader.git
-    cd top-auto-upgrader
+    # git clone https://github.com/telosprotocol/top-auto-upgrader.git
+    # cd top-auto-upgrader
     # git submodule update --init
 
-    cargo build --release
+    # cargo build --release
 
-    cd ..
+    # cd ..
 
-    /bin/cp -rfa ./top-auto-upgrader/target/release/${bin_name} ${target_dir}
+    /bin/cp -rfa ./target/release/${bin_name} ${target_dir}
 
-    rm -rf top-auto-upgrader
+    # rm -rf top-auto-upgrader
 }
 
 # Uninstall
@@ -519,7 +520,7 @@ function __install() {
     cd ${cur_dir}
 
     # 3. install neccessary build tools
-    install_build_tools
+    # install_build_tools
 
     # 4. uninstall old auto upgrader
     do_uninstall_action
