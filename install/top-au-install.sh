@@ -20,8 +20,8 @@ service_stub=/etc/init.d/${service_name}
 [ ! -d "/etc/init.d" ] && service_stub=/usr/bin/${service_name} # compatible with centos 8 or higher, which do not have directory /etc/init.d
 bin_name=top-auto-upgrader
 
-# TODO edit here
-user_config_accouts=""
+# TODO edit here, format json array like: `{"address": "Txxx","minerpubkey": "xxx"},{"address": "Txxx","minerpubkey": "xxx"}`
+user_config_accouts=''
 
 # config_var:
 config_machine_id=""

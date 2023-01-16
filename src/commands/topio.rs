@@ -179,10 +179,12 @@ impl TopioCommands {
 
         let mut stdin = command.stdin.take().expect("Failed to use stdin");
 
-        stdin
-            .write_all(pswd.as_bytes())
-            .expect("Failed to write to stdin");
-
+        let pswd: String = pswd.into();
+        std::thread::spawn(move || {
+            stdin
+                .write_all(pswd.as_bytes())
+                .expect("Failed to write to stdin");
+        });
         let output = command.wait_with_output()?;
 
         Ok(output)
