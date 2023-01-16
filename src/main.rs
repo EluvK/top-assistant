@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 use clap::Parser;
 use daemonize::Daemonize;
 use error::AuError;
-use logic::{KeepAliveLogic, UpgradeTopioLogic};
+use logic::UpgradeVersionLogic;
 use tokio::{
     join,
     time::{sleep, Duration},
@@ -29,9 +29,10 @@ fn logic_run(config: ConfigJson) -> NeverType {
         .build()
         .unwrap()
         .block_on(async {
-            let t = KeepAliveLogic::new(logic_mutex.clone(), config.clone());
-            let k = UpgradeTopioLogic::new(logic_mutex.clone(), config.clone());
-            join!(t.loop_run(), k.loop_run()); // won't exist.
+            let t = UpgradeVersionLogic::new(logic_mutex.clone(), config.clone());
+            // let k = UpgradeTopioLogic::new(logic_mutex.clone(), config.clone());
+            // join!(t.loop_run(), k.loop_run()); // won't exist.
+            join!(t.loop_run());
             panic!("ERROR");
             #[allow(unreachable_code)]
             loop {

@@ -1,7 +1,11 @@
+#![allow(dead_code)]
+
 use std::{
     io::Write,
     process::{Command, Output},
 };
+
+use tokio::time::{sleep, Duration};
 
 use crate::error::AuError;
 
@@ -131,7 +135,36 @@ impl TopioCommands {
         Ok(r)
     }
 
-    pub fn set_miner_key(&self, mining_pub_key: &str, pswd: String) -> Result<Output, AuError> {
+    pub async fn start_join_and_stop(
+        &self,
+        mining_pub_key: &str,
+        pswd: &str,
+    ) -> Result<(), AuError> {
+        _ = self.set_miner_key(mining_pub_key, pswd)?;
+        _ = self.start_topio()?;
+
+        let mut wait_cnt = 0;
+        loop {
+            sleep(Duration::from_secs(5)).await;
+            if wait_cnt >= 120 {
+                return Err(AuError::CustomError("node join failed".into()));
+            }
+            match self.check_is_joined()? {
+                JoinStatus::NotReady => {
+                    wait_cnt = wait_cnt + 1;
+                }
+                JoinStatus::Yes => break,
+                JoinStatus::NotRunning => {
+                    return Err(AuError::CustomError("node not even running".into()));
+                }
+            };
+        }
+        _ = self.stop_topio()?;
+
+        Ok(())
+    }
+
+    pub fn set_miner_key(&self, mining_pub_key: &str, pswd: &str) -> Result<Output, AuError> {
         let cmd_str = format!(
             r#"cd {} && topio mining setMinerKey {}"#,
             &self.exec_dir, &mining_pub_key
@@ -146,11 +179,9 @@ impl TopioCommands {
 
         let mut stdin = command.stdin.take().expect("Failed to use stdin");
 
-        std::thread::spawn(move || {
-            stdin
-                .write_all(pswd.as_bytes())
-                .expect("Failed to write to stdin");
-        });
+        stdin
+            .write_all(pswd.as_bytes())
+            .expect("Failed to write to stdin");
 
         let output = command.wait_with_output()?;
 
@@ -159,6 +190,20 @@ impl TopioCommands {
 
     pub fn start_topio(&self) -> Result<Output, AuError> {
         let cmd_str = format!(r#"cd {} && topio node startNode"#, &self.exec_dir);
+        let c = Command::new("sudo")
+            .args(&["-u", &self.operator_user])
+            .args(&["sh", "-c"])
+            .arg(cmd_str)
+            .stdout(std::process::Stdio::piped())
+            .spawn()?;
+
+        let r = c.wait_with_output()?;
+
+        Ok(r)
+    }
+
+    pub fn stop_topio(&self) -> Result<Output, AuError> {
+        let cmd_str = format!(r#"cd {} && topio node stopNode"#, &self.exec_dir);
         let c = Command::new("sudo")
             .args(&["-u", &self.operator_user])
             .args(&["sh", "-c"])

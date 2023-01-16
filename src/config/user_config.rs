@@ -1,16 +1,17 @@
 use serde::{Deserialize, Serialize};
 
-// use crate::{commands::read_file, error::AuError};
-
-// use top_keystore_rs::{decrypt_T0_keystore_file, decrypt_T8_keystore_file};
-
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UserConfigJson {
-    // mining_keystore_file_dir: String,
-    mining_pub_key: String,
+    accounts: Vec<UserKeystoreAddrPswd>,
     mining_pswd_enc: String,
     topio_package_dir: String,
     topio_user: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct UserKeystoreAddrPswd {
+    pub address: String,
+    pub minerpubkey: String,
 }
 
 impl UserConfigJson {
@@ -22,14 +23,6 @@ impl UserConfigJson {
         &self.mining_pswd_enc
     }
 
-    // pub(crate) fn try_decrypt_keystore(&self, pswd: String) -> Result<(), AuError> {
-    //     let keystore_file_content = read_file(&self.mining_keystore_file_dir)?;
-
-    //     _ = decrypt_T0_keystore_file(keystore_file_content.clone(), pswd.clone())
-    //         .or_else(|_| decrypt_T8_keystore_file(keystore_file_content.clone(), pswd.clone()))?;
-    //     Ok(())
-    // }
-
     pub fn user(&self) -> &str {
         &self.topio_user
     }
@@ -38,7 +31,36 @@ impl UserConfigJson {
         &self.topio_package_dir
     }
 
-    pub fn pubkey(&self) -> &str {
-        &&self.mining_pub_key
+    pub fn get_accounts(&self) -> &Vec<UserKeystoreAddrPswd> {
+        &self.accounts
+    }
+}
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+
+    #[test]
+    fn test_user_config_serde() {
+        let config_str = r#"
+        {
+            "accounts": [
+                {
+                    "address": "Txxxx",
+                    "minerpubkey": "Bkkkkk"
+                },
+                {
+                    "address": "Txxxx",
+                    "minerpubkey": "Bkkkkk"
+                }
+            ],
+            "mining_pswd_enc": "03215912372a4f0330affa7167ea1dbbec8253d7ea810b649adb8e35494453b21ba701421dcbc2040bacda2d5b9ea7bd0b",
+            "topio_package_dir": "/home/top",
+            "topio_user": "top"
+        }
+        "#;
+        let user_config: UserConfigJson = serde_json::from_str(config_str).unwrap();
+        println!("user_config struct :{:?}", user_config);
     }
 }

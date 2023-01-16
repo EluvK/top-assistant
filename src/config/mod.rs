@@ -18,6 +18,8 @@ use crate::{
     error::AuError,
 };
 
+use self::user_config::UserKeystoreAddrPswd;
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ConfigJson {
     pub user_config: UserConfigJson,
@@ -77,5 +79,9 @@ impl ConfigJson {
     /// Decode encrypted password with machine-id's RSA key
     pub fn fetch_password(&self) -> String {
         self.env_config.decrypt(self.user_config.get_enc_pswd())
+    }
+
+    pub fn accounts_info(&self) -> &Vec<UserKeystoreAddrPswd> {
+        self.user_config.get_accounts()
     }
 }
