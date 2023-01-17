@@ -6,6 +6,7 @@ mod config;
 mod error;
 mod frequency;
 mod logic;
+mod rewards;
 mod version;
 
 use std::sync::{Arc, Mutex};
@@ -19,7 +20,7 @@ use tokio::{
     time::{sleep, Duration},
 };
 
-use crate::config::ConfigJson;
+use crate::{config::ConfigJson, logic::ClaimRewardLogic};
 
 fn logic_run(config: ConfigJson) -> NeverType {
     let config = Arc::new(config);
@@ -29,10 +30,9 @@ fn logic_run(config: ConfigJson) -> NeverType {
         .build()
         .unwrap()
         .block_on(async {
-            let t = UpgradeVersionLogic::new(logic_mutex.clone(), config.clone());
-            // let k = UpgradeTopioLogic::new(logic_mutex.clone(), config.clone());
-            // join!(t.loop_run(), k.loop_run()); // won't exist.
-            join!(t.loop_run());
+            let uvl = UpgradeVersionLogic::new(logic_mutex.clone(), config.clone());
+            let crl = ClaimRewardLogic::new(logic_mutex.clone(), config.clone());
+            join!(uvl.loop_run(), crl.loop_run());
             panic!("ERROR");
             #[allow(unreachable_code)]
             loop {

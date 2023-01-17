@@ -7,7 +7,7 @@ use std::{
 
 use tokio::time::{sleep, Duration};
 
-use crate::error::AuError;
+use crate::{error::AuError, rewards::RewardInfo};
 
 #[derive(Debug)]
 pub enum ProcessStatus {
@@ -167,7 +167,33 @@ impl TopioCommands {
     pub fn set_miner_key(&self, mining_pub_key: &str, pswd: &str) -> Result<Output, AuError> {
         let cmd_str = format!(
             r#"cd {} && topio mining setMinerKey {}"#,
-            &self.exec_dir, &mining_pub_key
+            &self.exec_dir, mining_pub_key
+        );
+        let mut command = Command::new("sudo")
+            .args(&["-u", &self.operator_user])
+            .args(&["sh", "-c"])
+            .arg(cmd_str)
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .spawn()?;
+
+        let mut stdin = command.stdin.take().expect("Failed to use stdin");
+
+        let pswd: String = pswd.into();
+        std::thread::spawn(move || {
+            stdin
+                .write_all(pswd.as_bytes())
+                .expect("Failed to write to stdin");
+        });
+        let output = command.wait_with_output()?;
+
+        Ok(output)
+    }
+
+    pub fn set_default_account(&self, address: &str, pswd: &str) -> Result<Output, AuError> {
+        let cmd_str = format!(
+            r#"cd {} && topio wallet setDefaultAccount {}"#,
+            &self.exec_dir, address
         );
         let mut command = Command::new("sudo")
             .args(&["-u", &self.operator_user])
@@ -243,6 +269,42 @@ impl TopioCommands {
                 &output_str
             )))
         }
+    }
+
+    // reward
+    pub fn query_reward(&self, address: &str) -> Result<RewardInfo, AuError> {
+        let cmd_str = format!(
+            r#"cd {} && topio mining queryMinerReward {} "#,
+            &self.exec_dir, address
+        );
+        let c = Command::new("sudo")
+            .args(&["-u", &self.operator_user])
+            .args(&["sh", "-c"])
+            .arg(cmd_str)
+            .stdout(std::process::Stdio::piped())
+            .spawn()?;
+
+        let output = c.wait_with_output()?;
+        let json = json::parse(std::str::from_utf8(&output.stdout)?)?;
+        if let Some(reward) = RewardInfo::new_from_json_value(json) {
+            Ok(reward)
+        } else {
+            Err(AuError::CustomError("reward data parse error".into()))
+        }
+    }
+
+    pub fn claim_reward(&self, address: &str, pswd: &str) -> Result<Output, AuError> {
+        _ = self.set_default_account(address, pswd)?;
+        let cmd_str = format!(r#"cd {} && topio mining claimMinerReward"#, &self.exec_dir);
+        let c = Command::new("sudo")
+            .args(&["-u", &self.operator_user])
+            .args(&["sh", "-c"])
+            .arg(cmd_str)
+            .stdout(std::process::Stdio::piped())
+            .spawn()?;
+
+        let output = c.wait_with_output()?;
+        Ok(output)
     }
 
     /// @root

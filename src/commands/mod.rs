@@ -6,4 +6,5 @@ mod topio;
 
 /// standard file io methods. Used for `config.json`.
 pub(crate) use file::{read_file, write_file};
+#[allow(unused)]
 pub(crate) use topio::{JoinStatus, ProcessStatus, TopioCommands};

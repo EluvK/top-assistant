@@ -19,3 +19,6 @@
 
 mod upgrade_version;
 pub use upgrade_version::UpgradeVersionLogic;
+
+mod claim_reward;
+pub use claim_reward::ClaimRewardLogic;

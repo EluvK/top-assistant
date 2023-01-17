@@ -23,6 +23,8 @@ bin_name=top-auto-upgrader
 # TODO edit here, format json array like: `{"address": "Txxx","minerpubkey": "xxx"},{"address": "Txxx","minerpubkey": "xxx"}`
 user_config_accouts=''
 
+minimum_claim_value=2000
+
 # config_var:
 config_machine_id=""
 config_topio_home_dir=""
@@ -320,7 +322,8 @@ function write_top_auto_upgrader_config() {
         "accounts": [${user_config_accouts}],
         "mining_pswd_enc": "",
         "topio_package_dir": "${config_topio_package_dir}",
-        "topio_user": "${config_topio_user}"
+        "topio_user": "${config_topio_user}",
+        "minimum_claim_value" :${minimum_claim_value}
     },
     "env_config": {
         "machine_id": "${config_machine_id}"

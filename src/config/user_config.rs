@@ -6,6 +6,7 @@ pub struct UserConfigJson {
     mining_pswd_enc: String,
     topio_package_dir: String,
     topio_user: String,
+    minimum_claim_value: u64,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -34,6 +35,10 @@ impl UserConfigJson {
     pub fn get_accounts(&self) -> &Vec<UserKeystoreAddrPswd> {
         &self.accounts
     }
+
+    pub fn get_minimum_claim_value(&self) -> u64 {
+        self.minimum_claim_value
+    }
 }
 
 #[cfg(test)]
@@ -57,7 +62,8 @@ mod test {
             ],
             "mining_pswd_enc": "03215912372a4f0330affa7167ea1dbbec8253d7ea810b649adb8e35494453b21ba701421dcbc2040bacda2d5b9ea7bd0b",
             "topio_package_dir": "/home/top",
-            "topio_user": "top"
+            "topio_user": "top",
+            "minimum_claim_value": 2000
         }
         "#;
         let user_config: UserConfigJson = serde_json::from_str(config_str).unwrap();
