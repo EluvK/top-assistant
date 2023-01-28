@@ -320,11 +320,11 @@ impl TopioCommands {
             .spawn()?;
 
         let output = c.wait_with_output()?;
-        let vstr = std::str::from_utf8(&output.stdout)?;
-        let v = vstr
-            .parse::<f64>()
-            .map_err(|_| AuError::CustomError(format!("balance parse str f64 error {}", vstr)))?
-            as u64;
+        let v = std::str::from_utf8(&output.stdout)?
+            .chars()
+            .take_while(|c| c.is_ascii_digit())
+            .collect::<String>()
+            .parse::<u64>()?;
         Ok(v)
     }
 
@@ -410,7 +410,7 @@ impl TopioCommands {
 
 #[cfg(test)]
 mod test {
-    use crate::{commands::TopioCommands, error::AuError};
+    use crate::commands::TopioCommands;
 
     #[test]
     #[ignore]
@@ -456,11 +456,13 @@ mod test {
 
     #[test]
     fn test_f64_parse() {
-        let vstr = "5389.12341";
+        let vstr = "5389.12341\n";
         let v = vstr
-            .parse::<f64>()
-            .map_err(|_| AuError::CustomError(format!("balance parse str f64 error {}", vstr)))
-            .unwrap() as u64;
+            .chars()
+            .take_while(|c| c.is_ascii_digit())
+            .collect::<String>()
+            .parse::<u64>()
+            .unwrap();
         println!("v:{}", v);
     }
 }
