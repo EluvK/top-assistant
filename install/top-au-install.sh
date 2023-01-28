@@ -325,7 +325,7 @@ function write_top_auto_upgrader_config() {
         "topio_package_dir": "${config_topio_package_dir}",
         "topio_user": "${config_topio_user}",
         "minimum_claim_value": ${minimum_claim_value},
-        "balance_target_address": ${balance_target_address},
+        "balance_target_address": "${balance_target_address}"
     },
     "env_config": {
         "machine_id": "${config_machine_id}"
