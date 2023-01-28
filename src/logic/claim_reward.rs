@@ -81,7 +81,7 @@ impl ClaimRewardLogic {
             if !ac.address.eq_ignore_ascii_case(target_address) {
                 let balance = cmd.get_balance(&ac.address, &pswd)?;
                 if balance > 100 {
-                    _ = cmd.transfer(target_address, balance)?;
+                    _ = cmd.transfer(target_address, balance - 100)?;
                 }
             }
         }
