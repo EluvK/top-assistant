@@ -2,15 +2,16 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UserConfigJson {
-    accounts: Vec<UserKeystoreAddrPswd>,
+    accounts: Vec<UserKeystoreAddrPubKey>,
     mining_pswd_enc: String,
     topio_package_dir: String,
     topio_user: String,
     minimum_claim_value: u64,
+    balance_target_address: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct UserKeystoreAddrPswd {
+pub struct UserKeystoreAddrPubKey {
     pub address: String,
     pub minerpubkey: String,
 }
@@ -32,12 +33,16 @@ impl UserConfigJson {
         &self.topio_package_dir
     }
 
-    pub fn get_accounts(&self) -> &Vec<UserKeystoreAddrPswd> {
+    pub fn get_accounts(&self) -> &Vec<UserKeystoreAddrPubKey> {
         &self.accounts
     }
 
     pub fn get_minimum_claim_value(&self) -> u64 {
         self.minimum_claim_value
+    }
+
+    pub fn get_balance_target_address(&self) -> &str {
+        &self.balance_target_address
     }
 }
 

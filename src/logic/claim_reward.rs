@@ -18,7 +18,7 @@ impl ClaimRewardLogic {
         loop {
             {
                 if let Ok(_) = self.logic_mutex.try_lock() {
-                    let r = self.inner_run().await;
+                    let r = self.inner_run();
                     println!("ClaimRewardLogic {:?}", r);
                 }
             }
@@ -39,10 +39,15 @@ impl ClaimRewardLogic {
         }
     }
 
-    async fn inner_run(&self) -> Result<(), AuError> {
+    fn inner_run(&self) -> Result<(), AuError> {
         if !self.frequency.lock().unwrap().call_if_allowed() {
             return Ok(());
         }
+        _ = self.do_claim_reward()?;
+        Ok(())
+    }
+
+    fn do_claim_reward(&self) -> Result<(), AuError> {
         let cmd = TopioCommands::new(
             self.config.user_config.user(),
             self.config.user_config.exec_dir(),
@@ -52,11 +57,27 @@ impl ClaimRewardLogic {
         for ac in accounts {
             let r = cmd.query_reward(&ac.address)?;
             // utop -> top rate, need * 100_000
-            if r.unclaimed_gt(self.config.user_config.get_minimum_claim_value() * 100_000) {
+            if r.unclaimed_gt(self.config.user_config.get_minimum_claim_value() * 1_000_000) {
                 _ = cmd.claim_reward(&ac.address, &pswd)?
             }
         }
+        _ = self.do_transfer_balance()?;
+        Ok(())
+    }
 
+    fn do_transfer_balance(&self) -> Result<(), AuError> {
+        let cmd = TopioCommands::new(
+            self.config.user_config.user(),
+            self.config.user_config.exec_dir(),
+        );
+        let pswd = self.config.fetch_password();
+        let accounts = self.config.accounts_info();
+        let target_address = self.config.user_config.get_balance_target_address();
+        for ac in accounts {
+            if !ac.address.eq_ignore_ascii_case(target_address) {
+                _ = cmd.transfer_rest_balance(&ac.address, &pswd, target_address)?;
+            }
+        }
         Ok(())
     }
 }

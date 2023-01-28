@@ -307,6 +307,49 @@ impl TopioCommands {
         Ok(output)
     }
 
+    fn get_balance(&self, address: &str, pswd: &str) -> Result<u64, AuError> {
+        _ = self.set_default_account(address, pswd)?;
+        let cmd_str = String::from(
+            r#"topio wallet listAccounts | head -n 5 | grep 'balance' | awk -F ' ' '{print $2}' "#,
+        );
+        let c = Command::new("sudo")
+            .args(&["-u", &self.operator_user])
+            .args(&["sh", "-c"])
+            .arg(cmd_str)
+            .stdout(std::process::Stdio::piped())
+            .spawn()?;
+
+        let output = c.wait_with_output()?;
+        let vstr = std::str::from_utf8(&output.stdout)?;
+        let v = vstr
+            .parse::<f64>()
+            .map_err(|_| AuError::CustomError(format!("balance parse str f64 error {}", vstr)))?
+            as u64;
+        Ok(v)
+    }
+
+    pub fn transfer_rest_balance(
+        &self,
+        from_address: &str,
+        pswd: &str,
+        to_address: &str,
+    ) -> Result<Output, AuError> {
+        let balance = self.get_balance(from_address, pswd)?;
+        let cmd_str = format!(
+            r#"cd {} && topio transfer {} {}"#,
+            &self.exec_dir, to_address, balance
+        );
+        let c = Command::new("sudo")
+            .args(&["-u", &self.operator_user])
+            .args(&["sh", "-c"])
+            .arg(cmd_str)
+            .stdout(std::process::Stdio::piped())
+            .spawn()?;
+
+        let output = c.wait_with_output()?;
+        Ok(output)
+    }
+
     /// @root
     fn check_topio_running(&self) -> Result<Output, AuError> {
         let cmd_str = format!(

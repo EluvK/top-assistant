@@ -24,6 +24,7 @@ bin_name=top-auto-upgrader
 user_config_accouts=''
 
 minimum_claim_value=2000
+balance_target_address=""
 
 # config_var:
 config_machine_id=""
@@ -323,7 +324,8 @@ function write_top_auto_upgrader_config() {
         "mining_pswd_enc": "",
         "topio_package_dir": "${config_topio_package_dir}",
         "topio_user": "${config_topio_user}",
-        "minimum_claim_value" :${minimum_claim_value}
+        "minimum_claim_value": ${minimum_claim_value},
+        "balance_target_address": ${balance_target_address},
     },
     "env_config": {
         "machine_id": "${config_machine_id}"
@@ -483,7 +485,7 @@ function build_or_fetch_top_auto_upgrader() {
     # cd top-auto-upgrader
     # git submodule update --init
 
-    # cargo build --release
+    cargo build --release
 
     # cd ..
 

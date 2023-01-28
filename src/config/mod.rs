@@ -18,7 +18,7 @@ use crate::{
     error::AuError,
 };
 
-use self::user_config::UserKeystoreAddrPswd;
+use self::user_config::UserKeystoreAddrPubKey;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ConfigJson {
@@ -81,7 +81,7 @@ impl ConfigJson {
         self.env_config.decrypt(self.user_config.get_enc_pswd())
     }
 
-    pub fn accounts_info(&self) -> &Vec<UserKeystoreAddrPswd> {
+    pub fn accounts_info(&self) -> &Vec<UserKeystoreAddrPubKey> {
         self.user_config.get_accounts()
     }
 }
