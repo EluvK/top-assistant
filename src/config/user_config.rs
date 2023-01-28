@@ -68,7 +68,8 @@ mod test {
             "mining_pswd_enc": "03215912372a4f0330affa7167ea1dbbec8253d7ea810b649adb8e35494453b21ba701421dcbc2040bacda2d5b9ea7bd0b",
             "topio_package_dir": "/home/top",
             "topio_user": "top",
-            "minimum_claim_value": 2000
+            "minimum_claim_value": 2000,
+            "balance_target_address": "Txxxx"
         }
         "#;
         let user_config: UserConfigJson = serde_json::from_str(config_str).unwrap();

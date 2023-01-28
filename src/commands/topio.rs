@@ -307,7 +307,7 @@ impl TopioCommands {
         Ok(output)
     }
 
-    fn get_balance(&self, address: &str, pswd: &str) -> Result<u64, AuError> {
+    pub fn get_balance(&self, address: &str, pswd: &str) -> Result<u64, AuError> {
         _ = self.set_default_account(address, pswd)?;
         let cmd_str = String::from(
             r#"topio wallet listAccounts | head -n 5 | grep 'balance' | awk -F ' ' '{print $2}' "#,
@@ -328,16 +328,10 @@ impl TopioCommands {
         Ok(v)
     }
 
-    pub fn transfer_rest_balance(
-        &self,
-        from_address: &str,
-        pswd: &str,
-        to_address: &str,
-    ) -> Result<Output, AuError> {
-        let balance = self.get_balance(from_address, pswd)?;
+    pub fn transfer(&self, to_address: &str, amount: u64) -> Result<Output, AuError> {
         let cmd_str = format!(
             r#"cd {} && topio transfer {} {}"#,
-            &self.exec_dir, to_address, balance
+            &self.exec_dir, to_address, amount
         );
         let c = Command::new("sudo")
             .args(&["-u", &self.operator_user])
@@ -416,7 +410,7 @@ impl TopioCommands {
 
 #[cfg(test)]
 mod test {
-    use crate::commands::TopioCommands;
+    use crate::{commands::TopioCommands, error::AuError};
 
     #[test]
     #[ignore]
@@ -458,5 +452,15 @@ mod test {
 
         // let r = c.check_is_joined();
         // println!("check start result:{:?}", r);
+    }
+
+    #[test]
+    fn test_f64_parse() {
+        let vstr = "5389.12341";
+        let v = vstr
+            .parse::<f64>()
+            .map_err(|_| AuError::CustomError(format!("balance parse str f64 error {}", vstr)))
+            .unwrap() as u64;
+        println!("v:{}", v);
     }
 }

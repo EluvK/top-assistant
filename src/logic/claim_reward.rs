@@ -54,14 +54,18 @@ impl ClaimRewardLogic {
         );
         let pswd = self.config.fetch_password();
         let accounts = self.config.accounts_info();
+        let mut claim_flag = false;
         for ac in accounts {
             let r = cmd.query_reward(&ac.address)?;
-            // utop -> top rate, need * 100_000
+            // utop -> top rate, need * 1_000_000
             if r.unclaimed_gt(self.config.user_config.get_minimum_claim_value() * 1_000_000) {
-                _ = cmd.claim_reward(&ac.address, &pswd)?
+                _ = cmd.claim_reward(&ac.address, &pswd)?;
+                claim_flag = true;
             }
         }
-        _ = self.do_transfer_balance()?;
+        if claim_flag {
+            _ = self.do_transfer_balance()?;
+        }
         Ok(())
     }
 
@@ -75,7 +79,10 @@ impl ClaimRewardLogic {
         let target_address = self.config.user_config.get_balance_target_address();
         for ac in accounts {
             if !ac.address.eq_ignore_ascii_case(target_address) {
-                _ = cmd.transfer_rest_balance(&ac.address, &pswd, target_address)?;
+                let balance = cmd.get_balance(&ac.address, &pswd)?;
+                if balance > 100 {
+                    _ = cmd.transfer(target_address, balance)?;
+                }
             }
         }
         Ok(())
