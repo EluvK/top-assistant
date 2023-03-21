@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 mod user_config;
-use user_config::UserConfigJson;
+pub use user_config::UserConfigJson;
 
 mod env_config;
 use env_config::EnvConfigJson;
@@ -22,7 +24,7 @@ use self::user_config::UserKeystoreAddrPubKey;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ConfigJson {
-    pub user_config: UserConfigJson,
+    pub user_config: HashMap<String, UserConfigJson>,
     pub env_config: EnvConfigJson,
     pub au_config: AuConfigJson,
     pub temp_config: TempConfigJson,
@@ -64,24 +66,22 @@ impl ConfigJson {
     }
 
     fn try_encrypt_password(&mut self) {
-        let pswd = self.temp_config.take_pswd();
-        if !pswd.is_empty() {
-            self.user_config.set_pswd(self.env_config.encrypt(pswd));
+        for (id, user_config) in self.user_config.iter_mut() {
+            let pswd = self
+                .temp_config
+                .take_pswd(id)
+                .expect(format!("error get pswd of {}", id).as_str());
+            user_config.set_pswd(self.env_config.encrypt(pswd))
         }
     }
 
-    // fn try_decrypt_keystore(&mut self) -> Result<(), AuError> {
-    //     assert!(self.temp_config.take_pswd().is_empty());
-    //     let pswd = self.fetch_password();
-    //     self.user_config.try_decrypt_keystore(pswd)
-    // }
-
     /// Decode encrypted password with machine-id's RSA key
-    pub fn fetch_password(&self) -> String {
-        self.env_config.decrypt(self.user_config.get_enc_pswd())
+    pub fn fetch_password(&self, id: &String) -> String {
+        self.env_config
+            .decrypt(self.user_config.get(id).unwrap().get_enc_pswd())
     }
 
-    pub fn accounts_info(&self) -> &Vec<UserKeystoreAddrPubKey> {
-        self.user_config.get_accounts()
+    pub fn accounts_info(&self, id: &String) -> &Vec<UserKeystoreAddrPubKey> {
+        self.user_config.get(id).unwrap().get_accounts()
     }
 }

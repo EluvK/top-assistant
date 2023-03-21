@@ -1,9 +1,12 @@
-use rand::Rng;
+use rand::{seq::SliceRandom, Rng};
 use std::sync::{Arc, Mutex};
 use tokio::time::{sleep, Duration};
 
 use crate::{
-    commands::TopioCommands, config::ConfigJson, error::AuError, frequency::FrequencyControl,
+    commands::TopioCommands,
+    config::{ConfigJson, UserConfigJson},
+    error::AuError,
+    frequency::FrequencyControl,
 };
 
 pub struct ClaimRewardLogic {
@@ -48,35 +51,37 @@ impl ClaimRewardLogic {
     }
 
     fn do_claim_reward(&self) -> Result<(), AuError> {
-        let cmd = TopioCommands::new(
-            self.config.user_config.user(),
-            self.config.user_config.exec_dir(),
-        );
-        let pswd = self.config.fetch_password();
-        let accounts = self.config.accounts_info();
+        let acc_collections: Vec<&String> = self.config.user_config.keys().collect();
+        let rand_id = acc_collections.choose(&mut rand::thread_rng()).unwrap();
+        let rand_user_config = self.config.user_config.get(*rand_id).unwrap();
+
+        let cmd = TopioCommands::new(rand_user_config.user(), rand_user_config.exec_dir());
+        let pswd = self.config.fetch_password(&rand_id);
+        let accounts = self.config.accounts_info(&rand_id);
         let mut claim_flag = false;
         for ac in accounts {
             let r = cmd.query_reward(&ac.address)?;
             // utop -> top rate, need * 1_000_000
-            if r.unclaimed_gt(self.config.user_config.get_minimum_claim_value() * 1_000_000) {
+            if r.unclaimed_gt(rand_user_config.get_minimum_claim_value() * 1_000_000) {
                 _ = cmd.claim_reward(&ac.address, &pswd)?;
                 claim_flag = true;
             }
         }
         if claim_flag {
-            _ = self.do_transfer_balance()?;
+            _ = self.do_transfer_balance(rand_id, rand_user_config)?;
         }
         Ok(())
     }
 
-    fn do_transfer_balance(&self) -> Result<(), AuError> {
-        let cmd = TopioCommands::new(
-            self.config.user_config.user(),
-            self.config.user_config.exec_dir(),
-        );
-        let pswd = self.config.fetch_password();
-        let accounts = self.config.accounts_info();
-        let target_address = self.config.user_config.get_balance_target_address();
+    fn do_transfer_balance(
+        &self,
+        rand_id: &String,
+        rand_user_config: &UserConfigJson,
+    ) -> Result<(), AuError> {
+        let cmd = TopioCommands::new(rand_user_config.user(), rand_user_config.exec_dir());
+        let pswd = self.config.fetch_password(rand_id);
+        let accounts = self.config.accounts_info(rand_id);
+        let target_address = rand_user_config.get_balance_target_address();
         for ac in accounts {
             if !ac.address.eq_ignore_ascii_case(target_address) {
                 let balance = cmd.get_balance(&ac.address, &pswd)?;

@@ -36,8 +36,8 @@ impl From<serde_json::Error> for AuError {
     }
 }
 
-impl From<daemonize::DaemonizeError> for AuError {
-    fn from(err: daemonize::DaemonizeError) -> Self {
+impl From<daemonize::Error> for AuError {
+    fn from(err: daemonize::Error) -> Self {
         AuError::DaemonizeError(err.to_string())
     }
 }

@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex};
 use clap::Parser;
 use daemonize::Daemonize;
 use error::AuError;
-use logic::UpgradeVersionLogic;
+// use logic::UpgradeVersionLogic;
 use tokio::{
     join,
     time::{sleep, Duration},
@@ -30,9 +30,11 @@ fn logic_run(config: ConfigJson) -> NeverType {
         .build()
         .unwrap()
         .block_on(async {
-            let uvl = UpgradeVersionLogic::new(logic_mutex.clone(), config.clone());
+            // let uvl = UpgradeVersionLogic::new(logic_mutex.clone(), config.clone());
+            // let crl = ClaimRewardLogic::new(logic_mutex.clone(), config.clone());
+            // join!(uvl.loop_run(), crl.loop_run());
             let crl = ClaimRewardLogic::new(logic_mutex.clone(), config.clone());
-            join!(uvl.loop_run(), crl.loop_run());
+            join!(crl.loop_run());
             panic!("ERROR");
             #[allow(unreachable_code)]
             loop {
